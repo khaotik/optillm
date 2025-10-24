@@ -1,5 +1,6 @@
 import argparse
 import logging
+import traceback
 import os
 import secrets
 import time
@@ -57,6 +58,12 @@ request_batcher = None
 
 # Global conversation logger (initialized in main() if logging enabled)
 conversation_logger = None
+
+# helper function for debugging
+def getFilenameAndLineNumber() -> Tuple[str,int]:
+    from inspect import currentframe, getframeinfo
+    frameinfo = getframeinfo(currentframe().f_back)
+    return (frameinfo.filename, frameinfo.lineno)
 
 def get_config():
     import httpx
@@ -840,7 +847,9 @@ def proxy():
             conversation_logger.finalize_conversation(request_id)
         
         request_id_str = f' {request_id}' if request_id else ''
-        logger.error(f"Error processing request{request_id_str}: {str(e)}")
+        logger.error(f"{getFilenameAndLineNumber()}: Error processing request{request_id_str}: {str(e)}")
+        if logging_levels['debug']:
+            traceback.print_stack(e)
         return jsonify({"error": str(e)}), 500
 
     # Convert tagged conversation to messages format if needed

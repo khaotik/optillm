@@ -89,13 +89,17 @@ Example response format: [1, 5, 9, 15, 23]
 
 Selected modules (JSON array only):"""
 
+        max_tokens_value = 256
+        if 'gemini' in self.model.lower():
+            max_tokens_value += 8192 # matching "medium" reasoning effort
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": select_prompt}],
-            max_tokens=1024,
+            reasoning_effort='medium',
+            max_tokens=max_tokens_value,
             temperature=0.3
         )
-        
+
         self.completion_tokens += response.usage.completion_tokens
         
         try:
@@ -147,10 +151,12 @@ Instructions:
 
 Provide the adapted modules as a numbered list:"""
 
+        max_tokens_value = 2048
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": adapt_prompt}],
-            max_tokens=2048,
+            max_tokens=max_tokens_value,
+            reasoning_effort="none",
             temperature=0.3
         )
         
@@ -215,10 +221,14 @@ Instructions:
 
 Valid JSON reasoning structure:"""
 
+        max_tokens_value = 2048
+        if 'gemini' in self.model.lower():
+            max_tokens_value += 8192
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": implement_prompt}],
-            max_tokens=2048,
+            max_tokens=max_tokens_value,
+            reasoning_effort='medium',
             temperature=0.3
         )
         

@@ -13,11 +13,15 @@ def best_of_n_sampling(system_prompt: str, initial_query: str, client, model: st
     completions = []
     
     try:
+        max_tokens_value = 4096
+        if 'gemini' in model.lower():
+            max_tokens_value += 8192
         # Try to generate n completions in a single API call using n parameter
         provider_request = {
             "model": model,
             "messages": messages,
-            "max_tokens": 4096,
+            "max_tokens": max_tokens_value,
+            "reasoning_effort": "medium",
             "n": n,
             "temperature": 1
         }
@@ -39,10 +43,14 @@ def best_of_n_sampling(system_prompt: str, initial_query: str, client, model: st
         # Fallback: Generate completions one by one in a loop
         for i in range(n):
             try:
+                max_tokens_value = 4096
+                if 'gemini' in model.lower():
+                    max_tokens_value += 8192
                 provider_request = {
                     "model": model,
                     "messages": messages,
-                    "max_tokens": 4096,
+                    "max_tokens": max_tokens_value,
+                    "reasoning_effort": "medium",
                     "temperature": 1
                 }
                 response = client.chat.completions.create(**provider_request)
@@ -55,7 +63,7 @@ def best_of_n_sampling(system_prompt: str, initial_query: str, client, model: st
                 completions.append(response.choices[0].message.content)
                 bon_completion_tokens += response.usage.completion_tokens
                 logger.debug(f"Generated completion {i+1}/{n}")
-                
+
             except Exception as fallback_error:
                 logger.error(f"Error generating completion {i+1}: {str(fallback_error)}")
                 continue
@@ -75,10 +83,14 @@ def best_of_n_sampling(system_prompt: str, initial_query: str, client, model: st
         rating_messages.append({"role": "assistant", "content": completion})
         rating_messages.append({"role": "user", "content": "Rate the above response:"})
         
+        max_tokens_value = 256
+        if 'gemini' in model.lower():
+            max_tokens_value += 1024
         provider_request = {
             "model": model,
             "messages": rating_messages,
-            "max_tokens": 256,
+            "max_tokens": max_tokens_value,
+            "reasoning_effort":"low",
             "n": 1,
             "temperature": 0.1
         }

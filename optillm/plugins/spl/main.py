@@ -227,6 +227,9 @@ def run_spl(system_prompt: str, initial_query: str, client, model: str, request_
     except Exception as e:
         logger.error(f"Error in SPL plugin: {str(e)}")
         # Fall back to regular completion on error
+        max_token_value = DEFAULT_MAX_TOKENS
+        if 'gemini' in model.lower():
+            max_token_value += 8192
         try:
             response = client.chat.completions.create(
                 model=model,
@@ -234,6 +237,7 @@ def run_spl(system_prompt: str, initial_query: str, client, model: str, request_
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": initial_query}
                 ],
+                reasoning_effort='medium',
                 max_tokens=DEFAULT_MAX_TOKENS  # Ensure fallback also uses sufficient tokens
             )
             return response.choices[0].message.content, response.usage.completion_tokens

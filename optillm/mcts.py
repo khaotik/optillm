@@ -114,10 +114,14 @@ class MCTS:
         n = 3
 
         logger.info(f"Requesting {n} completions from the model")
+        max_tokens_value = 4096
+        if 'gemini' in self.model.lower():
+            max_tokens_value += 8192 # "medium"
         provider_request = {
             "model": self.model,
             "messages": messages,
-            "max_tokens": 4096,
+            "max_tokens": max_tokens_value,
+            "reasoning_effort": "medium",
             "n": n,
             "temperature": 1
         }
@@ -143,10 +147,14 @@ class MCTS:
         messages.append({"role": "user", "content": "Based on this conversation, what might the user ask or say next? Provide a likely user query."})
         
         logger.info("Requesting next user query from the model")
+        max_tokens_value = 1024
+        if 'gemini' in self.model.lower():
+            max_tokens_value += 8192 # "medium"
         provider_request = {
             "model": self.model,
             "messages": messages,
-            "max_tokens": 1024,
+            "max_tokens": max_tokens_value,
+            "reasoning_effort": "medium",
             "n": 1,
             "temperature": 1
         }
@@ -173,10 +181,14 @@ class MCTS:
         messages.extend(state.conversation_history)
         messages.append({"role": "user", "content": "Evaluate the quality of this conversation on a scale from 0 to 1, where 0 is poor and 1 is excellent. Consider factors such as coherence, relevance, and engagement. Respond with only a number."})
         
+        max_tokens_value = 256
+        if 'gemini' in self.model.lower():
+            max_tokens_value += 1024 # "low"
         provider_request = {
             "model": self.model,
             "messages": messages,
-            "max_tokens": 256,
+            "max_tokens": max_tokens_value,
+            "reasoning_effort": "low",
             "n": 1,
             "temperature": 0.1
         }
