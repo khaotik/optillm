@@ -120,10 +120,14 @@ class UncertaintyRoutedCoT:
         for i in range(num_samples):
             logger.debug(f"Generating sample {i+1}/{num_samples}")
             
+            max_tokens_value = self.max_tokens
+            if 'gemini' in self.model:
+                max_tokens_value += 8192
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=self.max_tokens,
+                max_tokens=max_tokens_value,
+                reasoning_effort='medium',
                 temperature=temperature,
                 top_p=top_p
             )
@@ -141,6 +145,7 @@ class UncertaintyRoutedCoT:
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=self.max_tokens,
+            reasoning_effort='none',
             temperature=0.0  # Greedy decoding
         )
         

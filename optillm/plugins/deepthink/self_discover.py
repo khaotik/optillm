@@ -13,6 +13,16 @@ from .reasoning_modules import get_all_modules, get_module_descriptions
 
 logger = logging.getLogger(__name__)
 
+int_list_schema =  {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Integer List",
+  "type": "array",
+  "description": "A list of integers with a length between 4 and 7, inclusive.",
+  "items": { "type": "integer" },
+  "minItems": 4,
+  "maxItems": 7
+}
+
 class SelfDiscover:
     """
     Implementation of the SELF-DISCOVER framework.
@@ -83,11 +93,11 @@ Instructions:
 2. Select 3-7 reasoning modules that are most relevant for this task
 3. Consider both the complexity of the task and the complementary nature of different modules
 4. Avoid selecting too many similar modules
-5. IMPORTANT: Respond ONLY with a valid JSON array of numbers
+5. IMPORTANT: Respond ONLY with a valid JSON object containing a single entry of array of numbers
 
-Example response format: [1, 5, 9, 15, 23]
+Example response format: {{"choices":[1, 5, 9, 15, 23]}}
 
-Selected modules (JSON array only):"""
+Selected modules (JSON object):"""
 
         max_tokens_value = 256
         if 'gemini' in self.model.lower():
@@ -97,7 +107,7 @@ Selected modules (JSON array only):"""
             messages=[{"role": "user", "content": select_prompt}],
             reasoning_effort='medium',
             max_tokens=max_tokens_value,
-            temperature=0.3
+            temperature=0.4,
         )
 
         self.completion_tokens += response.usage.completion_tokens
@@ -225,8 +235,8 @@ Valid JSON reasoning structure:"""
         if 'gemini' in self.model.lower():
             max_tokens_value += 8192
         response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": implement_prompt}],
+            model = self.model,
+            messages = [{"role": "user", "content": implement_prompt}],
             max_tokens=max_tokens_value,
             reasoning_effort='medium',
             temperature=0.3
@@ -250,7 +260,7 @@ Valid JSON reasoning structure:"""
             "verification": "Verify the solution is correct and complete",
             "final_answer": "State the final answer clearly"
         }
-        
+
         # Try multiple JSON extraction and parsing strategies
         strategies = [
             self._extract_json_strategy_1,
@@ -390,10 +400,14 @@ Instructions:
 
 Based on my systematic analysis using the reasoning structure, the answer is:"""
 
+        max_tokens_value = self.max_tokens
+        if 'gemini' in self.model.lower():
+            max_tokens_value += 24576
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": solve_prompt}],
             max_tokens=self.max_tokens,
+            reasoning_effort='high',
             temperature=0.7
         )
         
